@@ -1,0 +1,21 @@
+name: Build and test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Build with warnings as errors
+        run: swift build -Xswiftc -warnings-as-errors
+      - name: Test geometry and real OCR
+        run: swift test
+      - name: Package application
+        run: ./scripts/build.sh
+      - name: Upload local-build app
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: LassoText-macOS-arm64
+          path: dist/LassoText.app
