@@ -1,5 +1,6 @@
 import AppKit
 import LassoCore
+import ScreenCaptureKit
 import SwiftUI
 
 @MainActor
@@ -85,19 +86,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func beginCapture() {
         guard !busy else { return }
-        if !CGPreflightScreenCaptureAccess() {
-            let granted = CGRequestScreenCaptureAccess()
-            if !granted {
-                let alert = NSAlert()
-                alert.messageText = "Allow LassoText to read your screen"
-                alert.informativeText = "Enable LassoText in System Settings → Privacy & Security → Screen & System Audio Recording. If macOS asks, quit and reopen LassoText, then press Control–Shift–2. Captures stay on this Mac."
-                alert.addButton(withTitle: "Open System Settings")
-                alert.addButton(withTitle: "Later")
-                NSApp.activate(ignoringOtherApps: true)
-                if alert.runModal() == .alertFirstButtonReturn { openScreenRecordingSettings() }
-                return
-            }
-        }
         busy = true
         previousApp = NSWorkspace.shared.frontmostApplication
         setStatus("Capturing…", symbol: "ellipsis.circle")
@@ -108,7 +96,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             } catch {
                 busy = false
                 setStatus("Capture failed", symbol: "exclamationmark.triangle")
-                showError(error)
+                let captureError = error as NSError
+                if captureError.domain == SCStreamError.errorDomain,
+                   captureError.code == SCStreamError.Code.userDeclined.rawValue {
+                    showScreenPermissionHelp()
+                } else {
+                    showError(error)
+                }
             }
         }
     }
@@ -149,6 +143,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setStatus(_ message: String, symbol: String) {
         statusItem.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: message)
         statusItem.button?.toolTip = "LassoText · \(message)"
+    }
+
+    private func showScreenPermissionHelp() {
+        let alert = NSAlert()
+        alert.messageText = "Allow LassoText to read your screen"
+        alert.informativeText = "Enable LassoText in System Settings → Privacy & Security → Screen & System Audio Recording. If macOS asks, quit and reopen LassoText, then press Control–Shift–2. Captures stay on this Mac."
+        alert.addButton(withTitle: "Open System Settings")
+        alert.addButton(withTitle: "Later")
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn { openScreenRecordingSettings() }
     }
 
     private func showError(_ error: Error) {

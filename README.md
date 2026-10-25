@@ -85,6 +85,10 @@ icon, and signs it locally. Set `CODE_SIGN_IDENTITY` to a Developer ID identity
 for distribution signing. Local ad-hoc builds are **not notarized**. Public
 binary distribution requires Developer ID signing and Apple notarization; the
 source can be built locally without either. Rebuilding an ad-hoc signed app can
-require granting Screen Recording permission again.
+require granting Screen Recording permission again. If the switch is already on
+but capture still reports access denied, remove only LassoText from that privacy
+list, add the current `/Applications/LassoText.app` again, and choose **Quit &
+Reopen**. Replacing the stale entry resolved this on the development Mac; simply
+toggling it did not.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution checks.
