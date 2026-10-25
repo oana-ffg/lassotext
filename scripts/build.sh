@@ -9,8 +9,8 @@ app="$PWD/dist/LassoText.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$bin_dir/LassoText" "$app/Contents/MacOS/LassoText"
 cp Resources/Info.plist "$app/Contents/Info.plist"
-swift scripts/make-icon.swift "$app/Contents/Resources/AppIcon.icns"
-# A stable local signature; public distribution also needs a Developer ID and notarization.
+swift scripts/make-icon.swift Resources/LassoText.png "$app/Contents/Resources/AppIcon.icns"
+# Sign locally by default; public distribution also needs a Developer ID and notarization.
 codesign --force --sign "${CODE_SIGN_IDENTITY:--}" "$app"
 codesign --verify --strict "$app"
 echo "Built $app"

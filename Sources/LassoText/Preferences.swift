@@ -26,10 +26,10 @@ struct SettingsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             HStack(alignment: .top, spacing: 16) {
-                Image(systemName: "viewfinder")
-                    .font(.system(size: 34, weight: .medium)).foregroundStyle(.teal)
-                    .frame(width: 64, height: 64)
-                    .background(.teal.opacity(0.12), in: RoundedRectangle(cornerRadius: 17))
+                Image(nsImage: NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath))
+                    .resizable().interpolation(.high).scaledToFit()
+                    .frame(width: 72, height: 72)
+                    .accessibilityLabel("LassoText icon")
                 VStack(alignment: .leading, spacing: 5) {
                     Text("LassoText").font(.largeTitle.bold())
                     Text("Grab text. Get on with it.").foregroundStyle(.secondary)
