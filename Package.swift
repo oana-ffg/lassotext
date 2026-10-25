@@ -7,7 +7,9 @@ let package = Package(
     products: [.executable(name: "LassoText", targets: ["LassoText"])],
     targets: [
         .target(name: "LassoCore"),
-        .executableTarget(name: "LassoText", dependencies: ["LassoCore"]),
+        .target(name: "LassoMenuBar"),
+        .executableTarget(name: "LassoText", dependencies: ["LassoCore", "LassoMenuBar"]),
         .testTarget(name: "LassoCoreTests", dependencies: ["LassoCore"]),
+        .testTarget(name: "LassoMenuBarTests", dependencies: ["LassoMenuBar"]),
     ]
 )

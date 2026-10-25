@@ -1,5 +1,6 @@
 import AppKit
 import LassoCore
+import LassoMenuBar
 import ScreenCaptureKit
 import OSLog
 import SwiftUI
@@ -10,8 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let recognizer = TextRecognizer()
     private let overlay = SelectionOverlay()
     private var shortcut: GlobalShortcut?
-    private var statusItem: NSStatusItem!
-    private var statusMenuItem: NSMenuItem!
+    private var menuBar: MenuBarController!
     private let logger = Logger(subsystem: "io.github.oana-ffg.LassoText", category: "Workflow")
     private var settingsWindow: NSWindow?
     private var busy = false
@@ -41,45 +41,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        guard !busy else { return false }
+        guard !busy, !menuBar.isShown else { return false }
         showSettings()
         return true
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         shortcut?.stop()
+        menuBar.stop()
         if let screenObserver { NotificationCenter.default.removeObserver(screenObserver) }
     }
 
     private func makeMenu() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "viewfinder", accessibilityDescription: "LassoText")
-        statusItem.button?.toolTip = "LassoText · \(CaptureShortcut.label)"
-        let menu = NSMenu()
-        statusMenuItem = menu.addItem(withTitle: "Ready · \(CaptureShortcut.label)", action: nil, keyEquivalent: "")
-        menu.addItem(.separator())
-        let capture = menu.addItem(withTitle: "Capture Text    \(CaptureShortcut.symbols)", action: #selector(captureFromMenu), keyEquivalent: "")
-        capture.target = self
-        menu.addItem(.separator())
-        let settings = menu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
-        settings.target = self
-        menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit LassoText", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        statusItem.menu = menu
+        menuBar = MenuBarController(
+            shortcut: CaptureShortcut.symbols,
+            capture: { [weak self] previous in self?.beginCapture(returningTo: previous) },
+            settings: { [weak self] in self?.showSettings() },
+            quit: { NSApp.terminate(nil) },
+            reportError: { [weak self] error in self?.showError(error) }
+        )
     }
 
-    @objc private func captureFromMenu() {
-        // Let the menu dismiss before freezing the display.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in
-            self?.beginCapture()
-        }
-    }
-
-    @objc private func showSettings() {
+    private func showSettings() {
         if settingsWindow == nil {
             let view = SettingsView(preferences: preferences, languages: languages) { [weak self] in
                 self?.settingsWindow?.orderOut(nil)
-                self?.captureFromMenu()
+                self?.beginCapture()
             }
             let window = NSWindow(contentViewController: NSHostingController(rootView: view))
             window.title = "LassoText"
@@ -92,21 +79,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow?.makeKeyAndOrderFront(nil)
     }
 
-    private func beginCapture() {
+    private func beginCapture(returningTo application: NSRunningApplication? = nil) {
         logger.notice("Capture requested; busy: \(self.busy)")
         guard !busy else { return }
+        let menuApplication = menuBar.close()
         busy = true
-        previousApp = NSWorkspace.shared.frontmostApplication
-        setStatus("Capturing…", symbol: "ellipsis.circle")
+        previousApp = application ?? menuApplication ?? NSWorkspace.shared.frontmostApplication
+        setStatus("Capturing…")
         Task { [self] in
             do {
                 let displays = try await ScreenCapture.captureDisplays()
                 logger.notice("Captured \(displays.count) displays; waiting for selection")
-                setStatus("Drag an area", symbol: "viewfinder")
+                setStatus("Drag an area")
                 overlay.show(displays) { [weak self] result in self?.selectionFinished(result) }
             } catch {
                 busy = false
-                setStatus("Capture failed", symbol: "exclamationmark.triangle")
+                setStatus("Capture failed")
                 let captureError = error as NSError
                 if captureError.domain == SCStreamError.errorDomain,
                    captureError.code == SCStreamError.Code.userDeclined.rawValue {
@@ -125,13 +113,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         switch result {
         case .failure(let error):
             busy = false
-            setStatus("Capture failed", symbol: "exclamationmark.triangle")
+            setStatus("Capture failed")
             showError(error)
         case .success(nil):
             busy = false
-            setStatus(CaptureShortcut.label, symbol: "viewfinder")
+            setStatus(CaptureShortcut.label)
         case .success(let image?):
-            setStatus("Reading text…", symbol: "ellipsis.circle")
+            setStatus("Reading text…")
             let language = preferences.language == "auto" ? nil : preferences.language
             let keepLineBreaks = preferences.keepLineBreaks
             Task {
@@ -146,20 +134,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     NSPasteboard.general.clearContents()
                     guard NSPasteboard.general.writeObjects([item]) else { throw ClipboardError.writeFailed }
                     logger.notice("Copied \(text.count) characters")
-                    setStatus("Copied \(text.count) characters", symbol: "checkmark.viewfinder")
+                    setStatus("Copied \(text.count) characters")
                     if preferences.playSound { NSSound(named: "Pop")?.play() }
                 } catch {
-                    setStatus("Recognition failed", symbol: "exclamationmark.triangle")
+                    setStatus("Recognition failed")
                     showError(error)
                 }
             }
         }
     }
 
-    private func setStatus(_ message: String, symbol: String) {
-        statusMenuItem.title = message
-        statusItem.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: message)
-        statusItem.button?.toolTip = "LassoText · \(message)"
+    private func setStatus(_ message: String) {
+        menuBar.setStatus(message)
     }
 
     private func showScreenPermissionHelp() {

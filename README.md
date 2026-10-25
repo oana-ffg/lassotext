@@ -36,7 +36,10 @@ it installed there. On first capture, allow **LassoText** in System Settings →
 Privacy & Security → Screen & System Audio Recording. Reopen the app if macOS
 requests it. Accessibility and Input Monitoring permissions are not required.
 
-The menu bar icon offers **Capture Text**, **Settings**, and **Quit**. Settings
+The menu bar uses a monochrome lasso mark that follows the system appearance.
+Click it to toggle a nonmodal panel with **Capture Text**, **Settings**, and
+**Quit**. Click again, click outside, or press Escape to dismiss it. Opening the
+panel does not capture or freeze your screen. Settings
 include recognition language, line breaks, copy sound, and opt-in start at login.
 If another app owns Command + Shift + 2, LassoText shows the registration error;
 capture remains available from its menu.
@@ -84,13 +87,16 @@ swift test
 
 `LassoCore` owns OCR and point-to-pixel geometry. The app target owns the global
 hotkey, per-display capture, selection windows, preferences, and clipboard.
+`LassoMenuBar` owns the nonmodal status panel and native template icon.
 Tests exercise real Vision recognition of rendered English, Romanian, and Danish
 text on light and dark backgrounds, line breaks, blank input, unsupported
 languages, Retina scaling, clipping, and reverse drags. The primary-language test
 requires an OS whose Vision engine supports those languages. CI compiles all
 tests and runs the deterministic geometry suite. Run the complete `swift test`
 suite locally to verify OCR accuracy: the initial hosted macOS runner exceeded
-its 15-minute timeout running Vision recognition.
+its 15-minute timeout running Vision recognition. The local AppKit panel tests
+exercise a real popover in a window host, including repeat clicks, outside event
+delivery, and Escape; they require a graphical macOS session.
 
 The packaging script creates a complete `.app`, generates its vector-derived
 icon, and signs it locally. Set `CODE_SIGN_IDENTITY` to a Developer ID identity
