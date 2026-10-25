@@ -42,7 +42,7 @@ struct SettingsView: View {
                         .font(.callout).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Text("⌃ ⇧ 2").font(.system(.title3, design: .monospaced).weight(.semibold))
+                Text(CaptureShortcut.symbols).font(.system(.title3, design: .monospaced).weight(.semibold))
                     .padding(12).background(.quaternary, in: RoundedRectangle(cornerRadius: 9))
             }
             Form {

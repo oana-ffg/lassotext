@@ -1,6 +1,7 @@
 import AppKit
 import LassoCore
 import ScreenCaptureKit
+import OSLog
 import SwiftUI
 
 @MainActor
@@ -10,6 +11,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let overlay = SelectionOverlay()
     private var shortcut: GlobalShortcut?
     private var statusItem: NSStatusItem!
+    private var statusMenuItem: NSMenuItem!
+    private let logger = Logger(subsystem: "io.github.oana-ffg.LassoText", category: "Workflow")
     private var settingsWindow: NSWindow?
     private var busy = false
     private var languages: [String] = []
@@ -24,6 +27,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 (Locale.current.localizedString(forIdentifier: $0) ?? $0)
                     .localizedStandardCompare(Locale.current.localizedString(forIdentifier: $1) ?? $1) == .orderedAscending
             }
+        } catch { showError(error) }
+        do {
             shortcut = try GlobalShortcut { [weak self] in self?.beginCapture() }
         } catch { showError(error) }
         screenObserver = NotificationCenter.default.addObserver(
@@ -36,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        guard !busy else { return false }
         showSettings()
         return true
     }
@@ -48,9 +54,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func makeMenu() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(systemSymbolName: "viewfinder", accessibilityDescription: "LassoText")
-        statusItem.button?.toolTip = "LassoText · Control–Shift–2"
+        statusItem.button?.toolTip = "LassoText · \(CaptureShortcut.label)"
         let menu = NSMenu()
-        let capture = menu.addItem(withTitle: "Capture Text    ⌃⇧2", action: #selector(captureFromMenu), keyEquivalent: "")
+        statusMenuItem = menu.addItem(withTitle: "Ready · \(CaptureShortcut.label)", action: nil, keyEquivalent: "")
+        menu.addItem(.separator())
+        let capture = menu.addItem(withTitle: "Capture Text    \(CaptureShortcut.symbols)", action: #selector(captureFromMenu), keyEquivalent: "")
         capture.target = self
         menu.addItem(.separator())
         let settings = menu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
@@ -85,6 +93,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func beginCapture() {
+        logger.notice("Capture requested; busy: \(self.busy)")
         guard !busy else { return }
         busy = true
         previousApp = NSWorkspace.shared.frontmostApplication
@@ -92,6 +101,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { [self] in
             do {
                 let displays = try await ScreenCapture.captureDisplays()
+                logger.notice("Captured \(displays.count) displays; waiting for selection")
+                setStatus("Drag an area", symbol: "viewfinder")
                 overlay.show(displays) { [weak self] result in self?.selectionFinished(result) }
             } catch {
                 busy = false
@@ -108,6 +119,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func selectionFinished(_ result: Result<CGImage?, Error>) {
+        logger.notice("Selection completed")
         previousApp?.activate()
         previousApp = nil
         switch result {
@@ -117,19 +129,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             showError(error)
         case .success(nil):
             busy = false
-            setStatus("Control–Shift–2", symbol: "viewfinder")
+            setStatus(CaptureShortcut.label, symbol: "viewfinder")
         case .success(let image?):
             setStatus("Reading text…", symbol: "ellipsis.circle")
             let language = preferences.language == "auto" ? nil : preferences.language
             let keepLineBreaks = preferences.keepLineBreaks
             Task {
-                defer { busy = false }
+                defer {
+                    busy = false
+                    logger.notice("Recognition finished; capture ready again")
+                }
                 do {
                     let text = try await recognizer.recognize(image, language: language, keepLineBreaks: keepLineBreaks)
                     let item = NSPasteboardItem()
                     guard item.setString(text, forType: .string) else { throw ClipboardError.writeFailed }
                     NSPasteboard.general.clearContents()
                     guard NSPasteboard.general.writeObjects([item]) else { throw ClipboardError.writeFailed }
+                    logger.notice("Copied \(text.count) characters")
                     setStatus("Copied \(text.count) characters", symbol: "checkmark.viewfinder")
                     if preferences.playSound { NSSound(named: "Pop")?.play() }
                 } catch {
@@ -141,6 +157,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setStatus(_ message: String, symbol: String) {
+        statusMenuItem.title = message
         statusItem.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: message)
         statusItem.button?.toolTip = "LassoText · \(message)"
     }
@@ -148,7 +165,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showScreenPermissionHelp() {
         let alert = NSAlert()
         alert.messageText = "Allow LassoText to read your screen"
-        alert.informativeText = "Enable LassoText in System Settings → Privacy & Security → Screen & System Audio Recording. If macOS asks, quit and reopen LassoText, then press Control–Shift–2. Captures stay on this Mac."
+        alert.informativeText = "Enable LassoText in System Settings → Privacy & Security → Screen & System Audio Recording. If macOS asks, quit and reopen LassoText, then press \(CaptureShortcut.label). Captures stay on this Mac."
         alert.addButton(withTitle: "Open System Settings")
         alert.addButton(withTitle: "Later")
         NSApp.activate(ignoringOtherApps: true)

@@ -3,7 +3,7 @@
 **Select a rectangle. Copy its text. Get on with it.**
 
 A small, native macOS menu bar app inspired by the screen-to-text workflow of
-TextSniper. Press **Control + Shift + 2**, drag around text on any display, and
+TextSniper. Press **Command + Shift + 2** (the same default as TextSniper), drag around text on any display, and
 paste it wherever you need it. Escape or right-click cancels.
 
 Built with Swift, AppKit, ScreenCaptureKit, and Apple Vision. MIT licensed.
@@ -26,7 +26,7 @@ requests it. Accessibility and Input Monitoring permissions are not required.
 
 The menu bar icon offers **Capture Text**, **Settings**, and **Quit**. Settings
 include recognition language, line breaks, copy sound, and opt-in start at login.
-If another app owns Control + Shift + 2, LassoText shows the registration error;
+If another app owns Command + Shift + 2, LassoText shows the registration error;
 capture remains available from its menu.
 
 ## Languages

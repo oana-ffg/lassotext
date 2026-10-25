@@ -1,11 +1,20 @@
 import Carbon
 import Foundation
+import OSLog
+
+enum CaptureShortcut {
+    static let keyCode = UInt32(kVK_ANSI_2)
+    static let modifiers = UInt32(cmdKey | shiftKey)
+    static let label = "Command–Shift–2"
+    static let symbols = "⌘ ⇧ 2"
+}
 
 @MainActor
 final class GlobalShortcut {
     private var hotKey: EventHotKeyRef?
     private var handler: EventHandlerRef?
     private let action: () -> Void
+    private let logger = Logger(subsystem: "io.github.oana-ffg.LassoText", category: "Shortcut")
 
     init(action: @escaping () -> Void) throws {
         self.action = action
@@ -21,14 +30,17 @@ final class GlobalShortcut {
                 return OSStatus(eventNotHandledErr)
             }
             MainActor.assumeIsolated {
-                Unmanaged<GlobalShortcut>.fromOpaque(context).takeUnretainedValue().action()
+                let shortcut = Unmanaged<GlobalShortcut>.fromOpaque(context).takeUnretainedValue()
+                shortcut.logger.notice("Capture shortcut received")
+                shortcut.action()
             }
             return noErr
         }, 1, &event, context, &handler)
         guard installStatus == noErr else { throw ShortcutError.status(installStatus) }
-        let status = RegisterEventHotKey(UInt32(kVK_ANSI_2), UInt32(controlKey | shiftKey),
+        let status = RegisterEventHotKey(CaptureShortcut.keyCode, CaptureShortcut.modifiers,
                                         EventHotKeyID(signature: 0x4C415353, id: 1),
-                                        GetApplicationEventTarget(), 0, &hotKey)
+                                        GetApplicationEventTarget(), OptionBits(kEventHotKeyExclusive), &hotKey)
+        logger.notice("Registered \(CaptureShortcut.label, privacy: .public); status: \(status)")
         guard status == noErr else {
             if let handler { RemoveEventHandler(handler) }
             handler = nil
@@ -47,7 +59,7 @@ final class GlobalShortcut {
 private enum ShortcutError: LocalizedError {
     case status(OSStatus)
     var errorDescription: String? {
-        "Could not register Control–Shift–2 (error \(code)). Another app may be using it. You can still capture from the menu bar."
+        "Could not register \(CaptureShortcut.label) (error \(code)). Another app may be using it. You can still capture from the menu bar."
     }
     private var code: OSStatus { switch self { case .status(let value): value } }
 }
