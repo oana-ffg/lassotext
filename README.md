@@ -1,6 +1,18 @@
-# LassoText
+<p align="center">
+  <img src="Resources/LassoText.png" width="128" alt="LassoText icon: a mint lasso ribbon around three ivory lines of text on a petrol-teal tile">
+</p>
 
-**Select a rectangle. Copy its text. Get on with it.**
+<h1 align="center">LassoText</h1>
+
+<p align="center">
+  <strong>Select a rectangle. Copy its text. Get on with it.</strong><br>
+  Offline screen-to-text for macOS · <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>2</kbd>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/oana-ffg/lassotext?color=036169" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/macOS-15%2B-036169" alt="macOS 15 or later">
+</p>
 
 A small, native macOS menu bar app inspired by the screen-to-text workflow of
 TextSniper. Press **Command + Shift + 2** (the same default as TextSniper), drag around text on any display, and
@@ -91,4 +103,5 @@ list, add the current `/Applications/LassoText.app` again, and choose **Quit &
 Reopen**. Replacing the stale entry resolved this on the development Mac; simply
 toggling it did not.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution checks.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution checks. The social
+preview and its source live in [docs/branding](docs/branding/README.md).

@@ -1,0 +1,176 @@
+<!doctype html>
+<!--
+  LassoText: GitHub social preview (1280 × 640).
+  Render with ./render.sh, which screenshots this page in headless Chrome.
+  The icon is the app's own artwork, loaded from Resources/LassoText.png.
+  Fonts are macOS system fonts: New York (ui-serif) and SF Pro (system-ui).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LassoText social preview</title>
+<style>
+  :root {
+    /* Sampled from Resources/LassoText.png. */
+    --deep: #03181e;
+    --mint: #9eeaca;
+    --ivory: #f8efe0;
+    --copper: #ecaa6f;
+    --muted: #8fb3ad;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { width: 1280px; height: 640px; overflow: hidden; }
+
+  body {
+    position: relative;
+    background:
+      radial-gradient(circle at 310px 320px, rgba(3, 97, 105, 0.55) 0, rgba(3, 97, 105, 0) 380px),
+      linear-gradient(160deg, #052a31 0%, var(--deep) 70%);
+    color: var(--ivory);
+    font-family: system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .icon {
+    position: absolute;
+    left: 58px;
+    top: 66px;
+    width: 508px;
+    height: 508px;
+    filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.5));
+  }
+
+  .copy {
+    position: absolute;
+    left: 628px;
+    right: 64px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .wordmark {
+    font-family: ui-serif, "New York", Georgia, serif;
+    font-weight: 700;
+    font-size: 100px;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+  }
+
+  /*
+    An illustration of the capture gesture, not app UI: the word "Text" is
+    lassoed by a selection rectangle, dragged from its top-left corner.
+  */
+  .selected {
+    position: relative;
+    display: inline-block;
+    margin-left: 0.03em;
+    padding: 0.06em 0.06em 0;
+    line-height: 0.9;
+    background: rgba(158, 234, 202, 0.12);
+    color: var(--mint);
+    outline: 3px dashed rgba(158, 234, 202, 0.85);
+    outline-offset: 0;
+  }
+
+  .handle {
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    border-radius: 3px;
+    background: var(--mint);
+  }
+  .handle.tl { left: -8px; top: -8px; }
+  .handle.br { right: -8px; bottom: -8px; }
+
+  .cursor {
+    position: absolute;
+    right: -34px;
+    bottom: -36px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .product {
+    margin-top: 34px;
+    font-size: 40px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.012em;
+    color: var(--ivory);
+  }
+
+  .tagline {
+    margin-top: 8px;
+    font-family: ui-serif, "New York", Georgia, serif;
+    font-style: italic;
+    font-size: 34px;
+    line-height: 1.2;
+    color: var(--mint);
+  }
+
+  .shortcut {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-top: 40px;
+  }
+
+  .keys { display: flex; gap: 8px; }
+
+  .key {
+    display: grid;
+    place-items: center;
+    min-width: 54px;
+    height: 54px;
+    padding: 0 12px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #0b4148, #072f35);
+    box-shadow:
+      inset 0 1px 0 rgba(248, 239, 224, 0.16),
+      inset 0 0 0 1.5px rgba(158, 234, 202, 0.28),
+      0 4px 0 #021216;
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--ivory);
+  }
+
+  .steps {
+    font-size: 30px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--ivory);
+  }
+
+  .facts {
+    margin-top: 34px;
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+  .facts b { font-weight: 600; color: #c4ddd7; }
+</style>
+</head>
+<body>
+  <img class="icon" src="../../Resources/LassoText.png" alt="">
+
+  <div class="copy">
+    <div class="wordmark">Lasso<span class="selected">Text<span class="handle tl"></span><span class="handle br"></span><svg class="cursor" viewBox="0 0 40 40" aria-hidden="true">
+      <g stroke-linecap="round">
+        <path d="M20 4 V36 M4 20 H36" stroke="#03181e" stroke-width="8" />
+        <path d="M20 4 V36 M4 20 H36" stroke="#ecaa6f" stroke-width="3.5" />
+      </g>
+    </svg></span></div>
+    <p class="product">Offline screen-to-text for macOS</p>
+    <p class="tagline">Grab text. Get on with it.</p>
+    <div class="shortcut">
+      <div class="keys"><span class="key">⌘</span><span class="key">⇧</span><span class="key">2</span></div>
+      <span class="steps">Select. Copy. Paste.</span>
+    </div>
+    <p class="facts">Apple Vision OCR · No accounts or analytics<br><b>Free and open source</b> · MIT</p>
+  </div>
+</body>
+</html>
