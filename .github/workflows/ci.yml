@@ -10,8 +10,9 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Build with warnings as errors
         run: swift build -Xswiftc -warnings-as-errors
-      - name: Test geometry and real OCR
-        run: swift test
+      - name: Compile tests and verify geometry
+        run: swift test --disable-xctest --filter SelectionGeometryTests
+        timeout-minutes: 3
       - name: Package application
         run: ./scripts/build.sh
       - name: Upload local-build app

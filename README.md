@@ -75,7 +75,10 @@ hotkey, per-display capture, selection windows, preferences, and clipboard.
 Tests exercise real Vision recognition of rendered English, Romanian, and Danish
 text on light and dark backgrounds, line breaks, blank input, unsupported
 languages, Retina scaling, clipping, and reverse drags. The primary-language test
-requires an OS whose Vision engine supports those languages.
+requires an OS whose Vision engine supports those languages. CI compiles all
+tests and runs the deterministic geometry suite. Run the complete `swift test`
+suite locally to verify OCR accuracy: the initial hosted macOS runner exceeded
+its 15-minute timeout running Vision recognition.
 
 The packaging script creates a complete `.app`, generates its vector-derived
 icon, and signs it locally. Set `CODE_SIGN_IDENTITY` to a Developer ID identity
