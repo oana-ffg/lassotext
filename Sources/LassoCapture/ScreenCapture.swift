@@ -1,14 +1,14 @@
 import AppKit
 import ScreenCaptureKit
 
-struct CapturedDisplay {
+public struct CapturedDisplay {
     let screen: NSScreen
     let image: CGImage
 }
 
 @MainActor
-enum ScreenCapture {
-    static func captureDisplays() async throws -> [CapturedDisplay] {
+public enum ScreenCapture {
+    public static func captureDisplays() async throws -> [CapturedDisplay] {
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
         var captures: [CapturedDisplay] = []
         for screen in NSScreen.screens {
