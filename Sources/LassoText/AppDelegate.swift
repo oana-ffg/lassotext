@@ -1,5 +1,6 @@
 import AppKit
 import LassoCore
+import LassoCapture
 import LassoMenuBar
 import ScreenCaptureKit
 import OSLog

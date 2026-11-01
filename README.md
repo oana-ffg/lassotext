@@ -85,15 +85,18 @@ swift test
 ./scripts/build.sh release
 ```
 
-`LassoCore` owns OCR and point-to-pixel geometry. The app target owns the global
-hotkey, per-display capture, selection windows, preferences, and clipboard.
+`LassoCore` owns OCR and point-to-pixel geometry. `LassoCapture` owns per-display
+capture and selection windows. The app target owns the global hotkey,
+preferences, and clipboard.
 `LassoMenuBar` owns the nonmodal status panel and native template icon.
 Tests exercise real Vision recognition of rendered English, Romanian, and Danish
 text on light and dark backgrounds, line breaks, blank input, unsupported
-languages, Retina scaling, clipping, and reverse drags. The primary-language test
+languages, Retina scaling, clipping, and reverse drags. Selection tests also
+bound the area invalidated during a synthetic 4K drag and compare partial
+repaints with full in-memory renders at 1× and 2× scale. The primary-language test
 requires an OS whose Vision engine supports those languages. CI compiles all
-tests and runs the deterministic geometry suite. Run the complete `swift test`
-suite locally to verify OCR accuracy: the initial hosted macOS runner exceeded
+tests and runs the deterministic geometry and selection suites. Run the complete
+`swift test` suite locally to verify OCR accuracy: the initial hosted macOS runner exceeded
 its 15-minute timeout running Vision recognition. The local AppKit panel tests
 exercise a real popover in a window host, including repeat clicks, outside event
 delivery, and Escape; they require a graphical macOS session.

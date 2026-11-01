@@ -7,8 +7,10 @@ let package = Package(
     products: [.executable(name: "LassoText", targets: ["LassoText"])],
     targets: [
         .target(name: "LassoCore"),
+        .target(name: "LassoCapture", dependencies: ["LassoCore"]),
         .target(name: "LassoMenuBar"),
-        .executableTarget(name: "LassoText", dependencies: ["LassoCore", "LassoMenuBar"]),
+        .executableTarget(name: "LassoText", dependencies: ["LassoCore", "LassoCapture", "LassoMenuBar"]),
+        .testTarget(name: "LassoCaptureTests", dependencies: ["LassoCapture"]),
         .testTarget(name: "LassoCoreTests", dependencies: ["LassoCore"]),
         .testTarget(name: "LassoMenuBarTests", dependencies: ["LassoMenuBar"]),
     ]

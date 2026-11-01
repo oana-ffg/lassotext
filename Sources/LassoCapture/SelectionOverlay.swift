@@ -2,11 +2,13 @@ import AppKit
 import LassoCore
 
 @MainActor
-final class SelectionOverlay {
+public final class SelectionOverlay {
     private var windows: [NSWindow] = []
     private var completion: ((Result<CGImage?, Error>) -> Void)?
 
-    func show(_ displays: [CapturedDisplay], completion: @escaping (Result<CGImage?, Error>) -> Void) {
+    public init() {}
+
+    public func show(_ displays: [CapturedDisplay], completion: @escaping (Result<CGImage?, Error>) -> Void) {
         self.completion = completion
         for display in displays {
             let window = SelectionWindow(contentRect: display.screen.frame, styleMask: .borderless,
@@ -27,7 +29,7 @@ final class SelectionOverlay {
         activeWindow?.makeFirstResponder(activeWindow?.contentView)
     }
 
-    func cancel() { finish(.success(nil)) }
+    public func cancel() { finish(.success(nil)) }
 
     private func finish(_ result: Result<CGImage?, Error>) {
         guard let completion else { return }
@@ -43,14 +45,16 @@ private final class SelectionWindow: NSWindow {
 }
 
 @MainActor
-private final class SelectionView: NSView {
+class SelectionView: NSView {
     private let image: CGImage
+    private let backgroundImage: NSImage
     private let completion: (Result<CGImage?, Error>) -> Void
     private var start: NSPoint?
     private var current: NSPoint?
 
     init(image: CGImage, completion: @escaping (Result<CGImage?, Error>) -> Void) {
         self.image = image
+        backgroundImage = NSImage(cgImage: image, size: .zero)
         self.completion = completion
         super.init(frame: .zero)
     }
@@ -61,7 +65,7 @@ private final class SelectionView: NSView {
     override func resetCursorRects() { addCursorRect(bounds, cursor: .crosshair) }
 
     override func draw(_ dirtyRect: NSRect) {
-        NSImage(cgImage: image, size: bounds.size).draw(in: bounds)
+        backgroundImage.draw(in: bounds)
         let mask = NSBezierPath(rect: bounds)
         if let selection {
             mask.appendRect(selection)
@@ -97,14 +101,26 @@ private final class SelectionView: NSView {
     override func mouseDown(with event: NSEvent) {
         window?.makeKey()
         window?.makeFirstResponder(self)
+        let previous = selection
         start = convert(event.locationInWindow, from: nil)
         current = start
-        needsDisplay = true
+        invalidateSelection(previous: previous)
     }
 
     override func mouseDragged(with event: NSEvent) {
+        let previous = selection
         current = convert(event.locationInWindow, from: nil)
-        needsDisplay = true
+        invalidateSelection(previous: previous)
+    }
+
+    private func invalidateSelection(previous: NSRect?) {
+        let next = selection
+        guard previous != next else { return }
+        // Restore the old outline and reveal the new selection. AppKit clips
+        // drawing to this region; the rest of the frozen display is unchanged.
+        let dirty = (previous ?? .null).union(next ?? .null)
+        guard !dirty.isNull else { return }
+        setNeedsDisplay(dirty.insetBy(dx: -2, dy: -2).integral.intersection(bounds))
     }
 
     override func mouseUp(with event: NSEvent) {
